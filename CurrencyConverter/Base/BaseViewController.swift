@@ -7,6 +7,14 @@
 
 import UIKit
 
-class BaseViewController: UIViewController {
-
+class BaseViewController: UIViewController, Themeable {
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        refreshTheme(theme: ThemeManager.shared.currentTheme)
+    }
+    
+    func refreshTheme(theme: Theme) {
+        view.backgroundColor = theme.backgroundColor
+    }
 }

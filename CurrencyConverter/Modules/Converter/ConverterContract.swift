@@ -39,7 +39,7 @@ protocol ConverterPresenterProtocol: PresenterProtocol, ConverterPresenterInterf
 
 protocol ConverterInteractorProtocol: InteractorProtocol {
     var convertTrigger: PublishSubject<ConvertModel> { get }
-    var result: Observable<String> { get }
+    var convertResult: Observable<String> { get }
 }
 
 protocol ConverterRouterProtocol: RouterProtocol {

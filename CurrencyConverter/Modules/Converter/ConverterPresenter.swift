@@ -30,7 +30,7 @@ final class ConverterPresenter: ConverterPresenterProtocol {
                 .bind(to: interactor.convertTrigger)
                 .disposed(by: disposeBag)
             
-            result = interactor.result
+            result = interactor.convertResult
         }
     }
     

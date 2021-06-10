@@ -7,8 +7,32 @@
 
 import Foundation
 
+enum PersistentError: Error {
+    case castFailed
+    case decodeFailed(reason: String)
+}
 
-struct Persistent<T> {
+protocol Persistable {
+    associatedtype PersistentValue
+    static func decode(_ value: PersistentValue) throws -> Self
+    func encode() throws -> PersistentValue
+}
+
+extension Persistable where Self: RawRepresentable {
+    static func decode(_ value: RawValue) throws -> Self {
+        guard let result = Self(rawValue: value) else {
+            throw PersistentError.decodeFailed(reason: "Decode RawRepresentable value of type \(self) failed, invalid raw value: \(value)")
+        }
+
+        return result
+    }
+
+    func encode() throws -> RawValue {
+        rawValue
+    }
+}
+
+struct Persistent<T:Persistable> {
     var key: String
     var value: T {
         didSet {
@@ -28,6 +52,6 @@ struct Persistent<T> {
     }
     
     private func syncValue() {
-        UserDefaults.standard.store(value: value, forKey: key)
+        try? UserDefaults.standard.store(value: value, forKey: key)
     }
 }

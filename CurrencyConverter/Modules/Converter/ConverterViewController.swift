@@ -15,27 +15,43 @@ final class ConverterViewController: BaseViewController, ConverterViewProtocol {
     private let disposeBag = DisposeBag()
     var presenter: ConverterPresenterProtocol?
     
-    lazy var fromTextField: UITextField = {
-        let temp = UITextField()
-        temp.font = R.font.montserratMedium(size: 20)
-        temp.placeholder = "Enter The Amount"
+    lazy var titleLabel: UILabel = {
+        let temp = UILabel()
+        temp.font = R.font.montserratBold(size: 28)
+        temp.text = "Currency Converter"
         return temp
     }()
     
-    lazy var toTextField: UITextField = {
-        let temp = UITextField()
-        temp.font = R.font.montserratMedium(size: 20)
-        temp.placeholder = "The Converted Amount"
-        temp.isEnabled = false
+    lazy var fromTextField: CurrencyTextField = {
+        let temp = CurrencyTextField()
+        temp.placeholder = "Enter the amount"
+        temp.currency = "USD"
         return temp
     }()
     
-    lazy var convertButton: UIButton = {
+    lazy var toTextField: CurrencyTextField = {
+        let temp = CurrencyTextField()
+        temp.isValueEnabled = false
+        temp.placeholder = "Result displayed here"
+        temp.currency = "VND"
+        return temp
+    }()
+    
+    lazy var switchButton: UIButton = {
         let temp = UIButton()
-        temp.backgroundColor = .yellow
+        temp.setImage(R.image.switchIcon()?.rotate(radians: .pi/2), for: .normal)
+        temp.imageView?.contentMode = .scaleAspectFit
+        temp.contentVerticalAlignment = .fill
+        temp.contentHorizontalAlignment = .fill
+        return temp
+    }()
+    
+    private lazy var convertButton: UIButton = {
+        let temp = UIButton()
+        temp.layer.cornerRadius = 8
+        temp.clipsToBounds = true
         temp.setTitle("Convert", for: .normal)
-        temp.titleLabel?.font = R.font.montserratBold(size: 28)
-        temp.setTitleColor(.black, for: .normal)
+        temp.titleLabel?.font = R.font.montserratBold(size: 26)
         return temp
     }()
     
@@ -44,26 +60,39 @@ final class ConverterViewController: BaseViewController, ConverterViewProtocol {
         
         view.backgroundColor = .white
         
+        view.addSubview(titleLabel)
         view.addSubview(fromTextField)
+        view.addSubview(switchButton)
         view.addSubview(toTextField)
         view.addSubview(convertButton)
         
+        titleLabel.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide.snp.top).offset(8)
+            make.leading.trailing.equalToSuperview().inset(24)
+        }
+        
         fromTextField.snp.makeConstraints{ make in
-            make.top.equalTo(view.safeAreaLayoutGuide.snp.top).offset(16)
+            make.top.equalTo(titleLabel.snp.bottom).offset(48)
             make.leading.trailing.equalToSuperview().inset(24)
             make.height.equalTo(48)
         }
         
+        switchButton.snp.makeConstraints { make in
+            make.top.equalTo(fromTextField.snp.bottom).offset(8)
+            make.leading.equalToSuperview().inset(32)
+            make.width.height.equalTo(64)
+        }
+        
         toTextField.snp.makeConstraints{ make in
-            make.top.equalTo(fromTextField.snp.bottom).offset(16)
+            make.top.equalTo(switchButton.snp.bottom).offset(8)
             make.leading.trailing.equalToSuperview().inset(24)
             make.height.equalTo(48)
         }
         
         convertButton.snp.makeConstraints{ make in
-            make.top.equalTo(toTextField.snp.bottom).offset(24)
+            make.top.equalTo(toTextField.snp.bottom).offset(48)
             make.leading.trailing.equalToSuperview().inset(24)
-            make.height.equalTo(48)
+            make.height.equalTo(56)
         }
     }
 
@@ -74,6 +103,19 @@ final class ConverterViewController: BaseViewController, ConverterViewProtocol {
             bindInput(input: presenter.inputs)
             bindOutput(output: presenter.outputs)
         }
+    }
+    
+    override func refreshTheme(theme: Theme) {
+        super.refreshTheme(theme: theme)
+        
+        titleLabel.textColor = theme.primaryTextColor
+        
+        convertButton.setBackgroundImage(theme.buttonBackgroundColor.toImage(), for: .normal)
+        convertButton.setBackgroundImage(theme.highlightedNuttonBackgroundColor.toImage(), for: .highlighted)
+        convertButton.setBackgroundImage(theme.disabledTextColor.toImage(), for: .disabled)
+        
+        convertButton.setTitleColor(theme.textOnYellowColor, for: .normal)
+        convertButton.setTitleColor(theme.disabledTextColor, for: .disabled)
     }
     
     func bindInput(input: ConverterPresenterInputs) {

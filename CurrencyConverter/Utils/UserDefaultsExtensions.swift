@@ -20,6 +20,20 @@ extension UserDefaults {
 }
 
 extension UserDefaults {
+    func store<T: Persistable>(value: T, forKey key: String) throws {
+        self.set(try value.encode(), forKey: key)
+        self.synchronize()
+    }
+
+    func get<T: Persistable>(forKey key: String) throws -> T {
+        guard let value = self.object(forKey: key) as? T.PersistentValue else {
+            throw PersistentError.castFailed
+        }
+        return try T.decode(value)
+    }
+}
+
+extension UserDefaults {
     func store<T: Mappable>(_ model: T?, forKey key: String) {
         if let model = model {
             let json = Mapper<T>().toJSON(model)
