@@ -7,6 +7,8 @@
 
 import Foundation
 import UIKit
+import RxSwift
+import RxCocoa
 
 typealias ConverterPresenterDependencies = (
     interactor: ConverterInteractorProtocol,
@@ -18,9 +20,12 @@ protocol ConverterViewProtocol: ViewProtocol {
 }
 
 protocol ConverterPresenterInputs {
+    var inputAmountChanged: PublishRelay<String?> { get }
+    var convertButtonTrigger: PublishRelay<String> { get }
 }
 
 protocol ConverterPresenterOutputs {
+    var result: Observable<String> { get }
 }
 
 protocol ConverterPresenterInterface {
@@ -33,7 +38,8 @@ protocol ConverterPresenterProtocol: PresenterProtocol, ConverterPresenterInterf
 }
 
 protocol ConverterInteractorProtocol: InteractorProtocol {
-    
+    var convertTrigger: PublishSubject<ConvertModel> { get }
+    var result: Observable<String> { get }
 }
 
 protocol ConverterRouterProtocol: RouterProtocol {

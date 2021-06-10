@@ -12,14 +12,25 @@ import RxCocoa
 
 final class ConverterPresenter: ConverterPresenterProtocol {
     struct Inputs: ConverterPresenterInputs {
-        
+        let inputAmountChanged = PublishRelay<String?>()
+        let convertButtonTrigger = PublishRelay<String>()
     }
     
     struct Outputs: ConverterPresenterOutputs {
         private let disposeBag = DisposeBag()
         
+        let result: Observable<String>
+        
         init(inputs: ConverterPresenterInputs, interactor: ConverterInteractorProtocol) {
             
+            inputs.convertButtonTrigger
+                .map{ inputText in
+                    ConvertModel(value: Double(inputText) ?? 0, fromCurrency: "AUD", toCurrency: "VND")
+                }
+                .bind(to: interactor.convertTrigger)
+                .disposed(by: disposeBag)
+            
+            result = interactor.result
         }
     }
     

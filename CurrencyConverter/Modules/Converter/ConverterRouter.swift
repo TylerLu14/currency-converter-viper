@@ -9,22 +9,13 @@ import Foundation
 import UIKit
 
 struct ConverterRouterInput {
-    func view() -> ConverterViewController {
+    func view(service: CurrencyLayerServiceProtocol, source: String) -> ConverterViewController {
         let view = ConverterViewController()
-        let interactor = ConverterInteractor()
+        let interactor = ConverterInteractor(service: service, source: source)
         let dependencies = ConverterPresenterDependencies(interactor: interactor, router: ConverterRouter(view))
         let presenter = ConverterPresenter(dependencies: dependencies)
         view.presenter = presenter
         return view
-    }
-
-    func push(from: ViewProtocol) {
-        from.push(view(), animated: true)
-    }
-
-    func present(from: ViewProtocol) {
-        let nav = UINavigationController(rootViewController: view())
-        from.present(nav, animated: true)
     }
 }
 

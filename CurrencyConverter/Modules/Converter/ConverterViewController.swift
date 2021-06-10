@@ -12,16 +12,19 @@ import RxCocoa
 import SnapKit
 
 final class ConverterViewController: BaseViewController, ConverterViewProtocol {
+    private let disposeBag = DisposeBag()
     var presenter: ConverterPresenterProtocol?
     
     lazy var fromTextField: UITextField = {
         let temp = UITextField()
+        temp.font = R.font.montserratMedium(size: 20)
         temp.placeholder = "Enter The Amount"
         return temp
     }()
     
     lazy var toTextField: UITextField = {
         let temp = UITextField()
+        temp.font = R.font.montserratMedium(size: 20)
         temp.placeholder = "The Converted Amount"
         temp.isEnabled = false
         return temp
@@ -29,7 +32,10 @@ final class ConverterViewController: BaseViewController, ConverterViewProtocol {
     
     lazy var convertButton: UIButton = {
         let temp = UIButton()
+        temp.backgroundColor = .yellow
         temp.setTitle("Convert", for: .normal)
+        temp.titleLabel?.font = R.font.montserratBold(size: 28)
+        temp.setTitleColor(.black, for: .normal)
         return temp
     }()
     
@@ -43,19 +49,19 @@ final class ConverterViewController: BaseViewController, ConverterViewProtocol {
         view.addSubview(convertButton)
         
         fromTextField.snp.makeConstraints{ make in
-            make.top.equalTo(view.safeAreaLayoutGuide.snp.top).inset(16)
+            make.top.equalTo(view.safeAreaLayoutGuide.snp.top).offset(16)
             make.leading.trailing.equalToSuperview().inset(24)
             make.height.equalTo(48)
         }
         
         toTextField.snp.makeConstraints{ make in
-            make.top.equalTo(fromTextField.snp.bottom).inset(16)
+            make.top.equalTo(fromTextField.snp.bottom).offset(16)
             make.leading.trailing.equalToSuperview().inset(24)
             make.height.equalTo(48)
         }
         
         convertButton.snp.makeConstraints{ make in
-            make.top.equalTo(toTextField.snp.bottom).inset(24)
+            make.top.equalTo(toTextField.snp.bottom).offset(24)
             make.leading.trailing.equalToSuperview().inset(24)
             make.height.equalTo(48)
         }
@@ -66,16 +72,29 @@ final class ConverterViewController: BaseViewController, ConverterViewProtocol {
         
         if let presenter = presenter {
             bindInput(input: presenter.inputs)
-            bindOutput(outpput: presenter.outputs)
+            bindOutput(output: presenter.outputs)
         }
     }
     
     func bindInput(input: ConverterPresenterInputs) {
+        fromTextField.rx.text
+            .bind(to: input.inputAmountChanged)
+            .disposed(by: disposeBag)
         
+        convertButton.rx.tap.withLatestFrom(fromTextField.rx.text)
+            .filterNil()
+            .bind(to: input.convertButtonTrigger)
+            .disposed(by: disposeBag)
     }
     
-    func bindOutput(outpput: ConverterPresenterOutputs) {
-        
+    func bindOutput(output: ConverterPresenterOutputs) {
+        output.result.subscribe(on: scheduler.main)
+            .subscribe(onNext: { [unowned self] result in
+                self.toTextField.text = result
+            }, onError: { error in
+                print(error)
+            })
+            .disposed(by: disposeBag)
     }
 
 }

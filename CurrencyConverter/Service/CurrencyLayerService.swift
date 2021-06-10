@@ -28,8 +28,15 @@ enum CurrencyLayerRouter: URLRequestConvertible {
         
         return parameters
     }
+    
+    var path: String {
+        switch self {
+        case .getLiveQuotesTLE: return "live"
+        }
+    }
+    
     var url: URL {
-        CurrencyLayerRouter.baseURL
+        CurrencyLayerRouter.baseURL.appendingPathComponent(path)
     }
 
     func asURLRequest() throws -> URLRequest {
@@ -40,19 +47,23 @@ enum CurrencyLayerRouter: URLRequestConvertible {
 }
 
 struct LiveQuotesResponse: Mappable {
-    var terms: URL
-    var privacy: URL
-    var timestamp: Date
+    var terms: URL?
+    var privacy: URL?
+    var timestamp: Int64
     var source: String
-    var quotes: [String:Decimal]
+    var quotes: [String:Double]
     
     init?(map: Map) {
-        return nil
+        terms = nil
+        privacy = nil
+        timestamp = 0
+        source = ""
+        quotes = [:]
     }
     
     mutating func mapping(map: Map) {
-        terms <- map["terms"]
-        privacy <- map["privacy"]
+        terms <- (map["terms"], URLTransform())
+        privacy <- (map["privacy"], URLTransform())
         timestamp <- map["timestamp"]
         source <- map["source"]
         quotes <- map["quotes"]

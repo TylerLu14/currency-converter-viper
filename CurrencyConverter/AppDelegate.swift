@@ -17,7 +17,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             //do nothing we will have a code in SceneceDelegate for this
         } else {
             window = UIWindow(frame: UIScreen.main.bounds)
-            window?.rootViewController = UINavigationController(rootViewController: ConverterRouterInput().view())
+            window?.rootViewController = UINavigationController(
+                rootViewController: ConverterRouterInput().view(
+                    service: CurrencyLayerService.shared,
+                    source: "USD"
+                )
+            )
             window?.makeKeyAndVisible()
         }
         

@@ -12,6 +12,7 @@ target 'CurrencyConverter' do
   pod 'RxCocoa'
   pod 'SnapKit'
   pod 'R.swift'
+  pod 'PanModal'
 
   target 'CurrencyConverterTests' do
     # inherit! :search_paths

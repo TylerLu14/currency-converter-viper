@@ -19,7 +19,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         
         self.window = UIWindow(windowScene: windowScene)
-        window?.rootViewController = UINavigationController(rootViewController: ConverterRouterInput().view())
+        window?.rootViewController =  UINavigationController(
+            rootViewController: ConverterRouterInput().view(
+                service: CurrencyLayerService.shared,
+                source: "USD"
+            )
+        )
         window?.makeKeyAndVisible()
     }
     

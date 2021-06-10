@@ -13,12 +13,14 @@ import ObjectMapper
 
 public enum ServiceError: Error {
     case cannotParseData
+    case currencyNotFound
 }
 
 extension ServiceError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .cannotParseData: return "Cannot parse data"
+        case .currencyNotFound: return "The convert currency cannot be found"
         }
     }
 }
@@ -51,7 +53,7 @@ class Service {
             request.responseJSON { response in
                 if let error = response.error {
                     single(.failure(error))
-                    print(error)
+                    return
                 }
 
                 switch response.result {
@@ -68,12 +70,15 @@ class Service {
             return Disposables.create { request.cancel() }
         }
         .subscribe(on: scheduler.concurrentUser)
+        .do(onError: { error in
+            print(error)
+        })
     }
     
     func request<T:Mappable>(urlRequest: URLRequestConvertible) -> Single<T> {
         request(urlRequest: urlRequest)
             .flatMap{ json in
-                guard let response = T(JSON: json) else {
+                guard let response = Mapper<T>().map(JSON: json) else {
                     return .error(ServiceError.cannotParseData)
                 }
                 return .just(response)

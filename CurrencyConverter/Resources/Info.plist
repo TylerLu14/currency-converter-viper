@@ -58,5 +58,26 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+    
+    <key>UIAppFonts</key>
+    <array>
+        <string>Montserrat-Black.ttf</string>
+        <string>Montserrat-Bold.ttf</string>
+        <string>Montserrat-Medium.ttf</string>
+        <string>Montserrat-Regular.ttf</string>
+    </array>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSExceptionDomains</key>
+        <dict>
+            <key>api.currencylayer.com</key>
+            <dict>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <true/>
+                <key>NSIncludesSubdomains</key>
+                <true/>
+            </dict>
+        </dict>
+    </dict>
 </dict>
 </plist>

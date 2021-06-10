@@ -7,11 +7,8 @@
 
 import Foundation
 
-protocol Persistable {
-    
-}
 
-struct Persistent<T>: Persistable {
+struct Persistent<T> {
     var key: String
     var value: T {
         didSet {
