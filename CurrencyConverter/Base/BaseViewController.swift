@@ -8,6 +8,10 @@
 import UIKit
 
 class BaseViewController: UIViewController, Themeable {
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        return ThemeManager.shared.currentTheme.statusBarStyle
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -16,5 +20,7 @@ class BaseViewController: UIViewController, Themeable {
     
     func refreshTheme(theme: Theme) {
         view.backgroundColor = theme.backgroundColor
+        setNeedsStatusBarAppearanceUpdate()
+        navigationController?.setNeedsStatusBarAppearanceUpdate()
     }
 }

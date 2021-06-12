@@ -19,11 +19,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         
         self.window = UIWindow(windowScene: windowScene)
-        window?.rootViewController =  UINavigationController(
-            rootViewController: ConverterRouterInput().view(
-                service: CurrencyLayerService.shared,
-                source: "USD"
-            )
+        window?.rootViewController =  NavigationController(
+            rootViewController: ConverterRouter.createModule(service: CurrencyLayerService.shared)
         )
         window?.makeKeyAndVisible()
     }
@@ -55,7 +52,5 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Use this method to save data, release shared resources, and store enough scene-specific state information
         // to restore the scene back to its current state.
     }
-
-
 }
 

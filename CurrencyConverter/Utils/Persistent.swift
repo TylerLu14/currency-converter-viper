@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import ObjectMapper
 
 enum PersistentError: Error {
     case castFailed
@@ -13,26 +14,64 @@ enum PersistentError: Error {
 }
 
 protocol Persistable {
-    associatedtype PersistentValue
-    static func decode(_ value: PersistentValue) throws -> Self
-    func encode() throws -> PersistentValue
+    func store(key: String)
+    static func get(key: String) -> Self?
+}
+
+extension Persistable {
+    func store(key: String) {
+        UserDefaults.standard.store(value: self, forKey: key)
+    }
+    
+    static func get(key: String) -> Self? {
+        UserDefaults.standard.get(forKey: key)
+    }
 }
 
 extension Persistable where Self: RawRepresentable {
-    static func decode(_ value: RawValue) throws -> Self {
-        guard let result = Self(rawValue: value) else {
-            throw PersistentError.decodeFailed(reason: "Decode RawRepresentable value of type \(self) failed, invalid raw value: \(value)")
-        }
-
-        return result
+    func store(key: String) {
+        UserDefaults.standard.store(value: self.rawValue, forKey: key)
     }
-
-    func encode() throws -> RawValue {
-        rawValue
+    
+    static func get(key: String) -> Self? {
+        guard let rawValue: RawValue = UserDefaults.standard.get(forKey: key) else {
+            return nil
+        }
+        return Self(rawValue: rawValue)
     }
 }
 
-struct Persistent<T:Persistable> {
+extension Persistable where Self: Mappable {
+    func store(key: String) {
+        UserDefaults.standard.store(object: self, forKey: key)
+    }
+    
+    static func get(key: String) -> Self? {
+        UserDefaults.standard.get(forKey: key)
+    }
+}
+
+extension Optional: Persistable where Wrapped: Persistable {
+    func store(key: String) {
+        switch self {
+        case .none:
+            UserDefaults.standard.removeObject(forKey: key)
+        case .some(let value):
+            value.store(key: key)
+        }
+    }
+    
+    static func get(key: String) -> Optional<Wrapped>? {
+        Wrapped.get(key: key)
+    }
+}
+
+extension Double: Persistable { }
+extension Int: Persistable { }
+extension Bool: Persistable { }
+extension Date: Persistable { }
+
+struct Persistent<T: Persistable> {
     var key: String
     var value: T {
         didSet {
@@ -43,15 +82,15 @@ struct Persistent<T:Persistable> {
     init(key: String, defaultValue: T) {
         self.key = key
         
-        if let currentValue: T = UserDefaults.standard.get(forKey: key) {
+        if let currentValue = T.get(key: key) {
             self.value = currentValue
         } else {
             self.value = defaultValue
-            syncValue()
+            self.value.store(key: key)
         }
     }
     
     private func syncValue() {
-        try? UserDefaults.standard.store(value: value, forKey: key)
+        value.store(key: key)
     }
 }

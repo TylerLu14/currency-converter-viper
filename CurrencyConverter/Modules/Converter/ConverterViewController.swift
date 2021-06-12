@@ -7,33 +7,45 @@
 
 
 import UIKit
-import RxSwift
-import RxCocoa
 import SnapKit
 
-final class ConverterViewController: BaseViewController, ConverterViewProtocol {
-    private let disposeBag = DisposeBag()
+extension ThemeType {
+    var icon: UIImage? {
+        switch self {
+        case .light: return R.image.themeChangeIconLight()
+        case .dark: return R.image.themeChangeIconDark()
+        }
+    }
+}
+
+final class ConverterViewController: BaseViewController {
+
     var presenter: ConverterPresenterProtocol?
     
     lazy var titleLabel: UILabel = {
         let temp = UILabel()
-        temp.font = R.font.montserratBold(size: 28)
+        temp.numberOfLines = 0
+        temp.font = R.font.montserratBold(size: 26)
         temp.text = "Currency Converter"
         return temp
     }()
     
     lazy var fromTextField: CurrencyTextField = {
         let temp = CurrencyTextField()
-        temp.placeholder = "Enter the amount"
-        temp.currency = "USD"
         return temp
     }()
     
     lazy var toTextField: CurrencyTextField = {
         let temp = CurrencyTextField()
         temp.isValueEnabled = false
-        temp.placeholder = "Result displayed here"
-        temp.currency = "VND"
+        return temp
+    }()
+    
+    lazy var errorLabel: UILabel = {
+        let temp = UILabel()
+        temp.numberOfLines = 0
+        temp.font = R.font.montserratRegular(size: 14)
+        temp.text = ""
         return temp
     }()
     
@@ -55,6 +67,8 @@ final class ConverterViewController: BaseViewController, ConverterViewProtocol {
         return temp
     }()
     
+    lazy var keyboardFollower = KeyboardFollower()
+    
     override func loadView() {
         super.loadView()
         
@@ -65,6 +79,7 @@ final class ConverterViewController: BaseViewController, ConverterViewProtocol {
         view.addSubview(switchButton)
         view.addSubview(toTextField)
         view.addSubview(convertButton)
+        view.addSubview(errorLabel)
         
         titleLabel.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide.snp.top).offset(8)
@@ -89,8 +104,13 @@ final class ConverterViewController: BaseViewController, ConverterViewProtocol {
             make.height.equalTo(48)
         }
         
+        errorLabel.snp.makeConstraints{ make in
+            make.top.equalTo(toTextField.snp.bottom).offset(40)
+            make.leading.trailing.equalToSuperview().inset(24)
+        }
+        
         convertButton.snp.makeConstraints{ make in
-            make.top.equalTo(toTextField.snp.bottom).offset(48)
+            make.top.equalTo(errorLabel.snp.bottom).offset(8)
             make.leading.trailing.equalToSuperview().inset(24)
             make.height.equalTo(56)
         }
@@ -99,10 +119,44 @@ final class ConverterViewController: BaseViewController, ConverterViewProtocol {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        if let presenter = presenter {
-            bindInput(input: presenter.inputs)
-            bindOutput(output: presenter.outputs)
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            image: ThemeManager.shared.selectedThemeType.icon,
+            style: .plain,
+            target: self, action: #selector(onTapped(themeButton:))
+        )
+        
+        presenter?.viewDidLoad()
+        
+        view.isUserInteractionEnabled = true
+        view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapped(backgroundGesture:))))
+        fromTextField.textField.addTarget(self, action: #selector(onTextChanged(fromTextField:)), for: .editingChanged)
+        
+        fromTextField.addCurrencyGesture(UITapGestureRecognizer(target: self, action: #selector(onTapped(fromCurrencyGesture:))))
+        toTextField.addCurrencyGesture(UITapGestureRecognizer(target: self, action: #selector(onTapped(toCurrencyGesture:))))
+        
+        convertButton.addTarget(self, action: #selector(onTapped(convertButton:)), for: .touchUpInside)
+        switchButton.addTarget(self, action: #selector(onTapped(switchButton:)), for: .touchUpInside)
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        keyboardFollower.follow { [unowned self] keyboardFrame, _, type in
+            switch type {
+            case .show:
+                let lowestView = self.convertButton
+                let offset =  min(keyboardFrame.minY - lowestView.frame.maxY - 16, 0)
+                self.view.transform = CGAffineTransform(translationX: 0, y: offset)
+            case .hide:
+                self.view.transform = .identity
+            }
         }
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        keyboardFollower.unfollow()
     }
     
     override func refreshTheme(theme: Theme) {
@@ -112,33 +166,76 @@ final class ConverterViewController: BaseViewController, ConverterViewProtocol {
         
         convertButton.setBackgroundImage(theme.buttonBackgroundColor.toImage(), for: .normal)
         convertButton.setBackgroundImage(theme.highlightedNuttonBackgroundColor.toImage(), for: .highlighted)
-        convertButton.setBackgroundImage(theme.disabledTextColor.toImage(), for: .disabled)
+        convertButton.setBackgroundImage(theme.disabledbuttonBackgroundColor.toImage(), for: .disabled)
         
         convertButton.setTitleColor(theme.textOnYellowColor, for: .normal)
         convertButton.setTitleColor(theme.disabledTextColor, for: .disabled)
-    }
-    
-    func bindInput(input: ConverterPresenterInputs) {
-        fromTextField.rx.text
-            .bind(to: input.inputAmountChanged)
-            .disposed(by: disposeBag)
         
-        convertButton.rx.tap.withLatestFrom(fromTextField.rx.text)
-            .filterNil()
-            .bind(to: input.convertButtonTrigger)
-            .disposed(by: disposeBag)
+        errorLabel.textColor = theme.errorTextColor
     }
     
-    func bindOutput(output: ConverterPresenterOutputs) {
-        output.result.subscribe(on: scheduler.main)
-            .subscribe(onNext: { [unowned self] result in
-                self.toTextField.text = result
-            }, onError: { error in
-                print(error)
-            })
-            .disposed(by: disposeBag)
+    @objc func onTapped(backgroundGesture: UITapGestureRecognizer) {
+        fromTextField.textField.resignFirstResponder()
     }
-
+    
+    @objc func onTextChanged(fromTextField: UITextField) {
+        presenter?.fromTextChanged(text: fromTextField.text)
+    }
+    
+    @objc func onTapped(convertButton: UIButton) {
+        presenter?.convertButtonTapped()
+    }
+    
+    @objc func onTapped(fromCurrencyGesture: UIGestureRecognizer) {
+        presenter?.showFromSelectCurrency(viewController: self)
+    }
+    
+    @objc func onTapped(toCurrencyGesture: UIGestureRecognizer) {
+        presenter?.showToSelectCurrency(viewController: self)
+    }
+    
+    @objc func onTapped(themeButton: UIButton) {
+        let currentTheme = ThemeManager.shared.selectedThemeType
+        ThemeManager.shared.selectedThemeType = ThemeType.allCases[(currentTheme.rawValue + 1) % ThemeType.allCases.count]
+        navigationItem.rightBarButtonItem?.image = ThemeManager.shared.selectedThemeType.icon
+    }
+    
+    @objc func onTapped(switchButton: UIButton) {
+        
+        UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseIn) {
+            let offset = self.toTextField.frame.minY - self.fromTextField.frame.minY
+            self.fromTextField.transform = CGAffineTransform(translationX: 0, y: offset)
+            self.toTextField.transform = CGAffineTransform(translationX: 0, y: -offset)
+        } completion: { _ in
+            self.presenter?.swapSelectedCurrency()
+            self.fromTextField.transform = .identity
+            self.toTextField.transform = .identity
+        }
+    }
 }
 
-extension ConverterViewController: ViewProtocol { }
+extension ConverterViewController: ConverterViewProtocol {
+    func updateErrorLabel(text: String?) {
+        errorLabel.text = text
+    }
+    
+    func updateConvertButton(text: String?, isEnabled: Bool) {
+        convertButton.isEnabled = isEnabled
+        convertButton.setTitle(text, for: .normal)
+    }
+    
+    func updateFromCurrency(with currency: CurrencyData) {
+        fromTextField.currency = currency.code
+        fromTextField.currencyImage = UIImage(named: currency.code.lowercased())
+    }
+    
+    func updateToCurrency(with currency: CurrencyData) {
+        toTextField.currency = currency.code
+        toTextField.currencyImage = UIImage(named: currency.code.lowercased())
+    }
+    
+    func updateResult(fromText: String?, toText: String?) {
+        fromTextField.text = fromText
+        toTextField.text = toText
+    }
+}

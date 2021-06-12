@@ -8,11 +8,11 @@ target 'CurrencyConverter' do
   # Pods for CurrencyConverter
   pod 'ObjectMapper'
   pod 'Alamofire'
-  pod 'RxSwift'
-  pod 'RxCocoa'
+  pod 'PromiseKit'
   pod 'SnapKit'
   pod 'R.swift'
   pod 'PanModal'
+  pod 'Reusable'
 
   target 'CurrencyConverterTests' do
     # inherit! :search_paths

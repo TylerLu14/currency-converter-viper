@@ -6,11 +6,11 @@
 //
 
 import Foundation
-import RxSwift
 import ObjectMapper
 import Alamofire
+import PromiseKit
 
-enum CurrencyLayerRouter: URLRequestConvertible {
+enum CurrencyLayerRouter: Alamofire.URLRequestConvertible {
     static let baseURL = URL(string: "http://api.currencylayer.com/")!
     static let apiKey = "15ec637620b129d17a5334393daa4dbe"
 
@@ -46,12 +46,30 @@ enum CurrencyLayerRouter: URLRequestConvertible {
     }
 }
 
-struct LiveQuotesResponse: Mappable {
+struct LiveQuotesResponse: Mappable, Persistable {
     var terms: URL?
     var privacy: URL?
     var timestamp: Int64
     var source: String
     var quotes: [String:Double]
+    
+    //currency rate comparing to source
+    var rates: [String:Double] {
+        var rates: [String:Double] = [:]
+        quotes.forEach{ pair, rate in
+            let code = String(pair.dropFirst(source.count))
+            rates[code] = rate
+        }
+        return rates
+    }
+    
+    init() {
+        terms = nil
+        privacy = nil
+        timestamp = 0
+        source = ""
+        quotes = [:]
+    }
     
     init?(map: Map) {
         terms = nil
@@ -71,11 +89,11 @@ struct LiveQuotesResponse: Mappable {
 }
 
 protocol CurrencyLayerServiceProtocol {
-    func fetchLiveQuotes(source: String) -> Single<LiveQuotesResponse>
+    func fetchLiveQuotes(source: String) -> Promise<LiveQuotesResponse>
 }
 
 extension CurrencyLayerServiceProtocol {
-    func fetchLiveQuotes() -> Single<LiveQuotesResponse> {
+    func fetchLiveQuotes() -> Promise<LiveQuotesResponse> {
         return fetchLiveQuotes(source: "USD")
     }
 }
@@ -83,7 +101,7 @@ extension CurrencyLayerServiceProtocol {
 class CurrencyLayerService: Service, CurrencyLayerServiceProtocol {
     static let shared = CurrencyLayerService()
     
-    func fetchLiveQuotes(source: String) -> Single<LiveQuotesResponse> {
+    func fetchLiveQuotes(source: String) -> Promise<LiveQuotesResponse> {
         request(urlRequest: CurrencyLayerRouter.getLiveQuotesTLE(source: source))
     }
 }

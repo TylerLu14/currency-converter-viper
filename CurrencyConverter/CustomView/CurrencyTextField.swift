@@ -6,19 +6,17 @@
 //
 
 import UIKit
-import RxSwift
-import RxCocoa
 
 class CurrencyView: View {
     private lazy var currencyImageView: UIImageView = {
         let temp = UIImageView()
+        temp.contentMode = .scaleAspectFit
         return temp
     }()
     
     private lazy var currencyLabel: UILabel = {
         let temp = UILabel()
         temp.font = R.font.montserratMedium(size: 16)
-        temp.contentMode = .scaleAspectFit
         return temp
     }()
     
@@ -47,13 +45,13 @@ class CurrencyView: View {
         addSubview(indicatorImageView)
         
         currencyImageView.snp.makeConstraints { make in
-            make.leading.equalToSuperview()
+            make.leading.equalToSuperview().inset(8)
             make.top.bottom.equalToSuperview()
             make.width.height.equalTo(16)
         }
         
         currencyLabel.snp.makeConstraints { make in
-            make.leading.equalTo(currencyImageView.snp.trailing)
+            make.leading.equalTo(currencyImageView.snp.trailing).offset(8)
             make.top.bottom.equalToSuperview()
         }
         currencyLabel.setContentHuggingPriority(.defaultHigh, for: .horizontal)
@@ -74,12 +72,6 @@ class CurrencyView: View {
     }
 }
 
-extension Reactive where Base == CurrencyTextField {
-    var text: ControlProperty<String?> {
-        return base.textField.rx.text
-    }
-}
-
 class CurrencyTextField: View {
     private lazy var currencyView: CurrencyView = {
         let temp = CurrencyView()
@@ -94,6 +86,7 @@ class CurrencyTextField: View {
     lazy var textField: TextField = {
         let temp = TextField()
         temp.font = R.font.montserratMedium(size: 18)
+        temp.keyboardType = .decimalPad
         return temp
     }()
     
@@ -128,6 +121,7 @@ class CurrencyTextField: View {
     override func setup() {
         super.setup()
         
+        isUserInteractionEnabled = true
         layer.cornerRadius = 8
         
         addSubview(currencyView)
@@ -164,7 +158,10 @@ class CurrencyTextField: View {
             string: textField.placeholder ?? "",
             attributes: [.foregroundColor: theme.textFieldPlaceholderTextColor]
         )
-        
+    }
+    
+    func addCurrencyGesture(_ gesture: UIGestureRecognizer) {
+        currencyView.addGestureRecognizer(gesture)
     }
 }
 

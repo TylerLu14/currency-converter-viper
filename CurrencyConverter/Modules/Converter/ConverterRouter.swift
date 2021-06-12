@@ -7,23 +7,33 @@
 
 import Foundation
 import UIKit
+import PanModal
 
-struct ConverterRouterInput {
-    func view(service: CurrencyLayerServiceProtocol, source: String) -> ConverterViewController {
+class ConverterRouter {
+    static func createModule(service: CurrencyLayerServiceProtocol) -> ConverterViewController {
+        
         let view = ConverterViewController()
-        let interactor = ConverterInteractor(service: service, source: source)
-        let dependencies = ConverterPresenterDependencies(interactor: interactor, router: ConverterRouter(view))
-        let presenter = ConverterPresenter(dependencies: dependencies)
+        
+        let presenter: ConverterPresenterProtocol & ConverterInteractorOutputProtocol = ConverterPresenter()
+        let interactor: ConverterInteractorProtocol = ConverterInteractor(service: service)
+        let router: ConverterRouterProtocol = ConverterRouter()
+        
         view.presenter = presenter
+        presenter.view = view
+        presenter.router = router
+        presenter.interactor = interactor
+        interactor.presenter = presenter
+        
         return view
+        
     }
 }
 
 
-final class ConverterRouter: ConverterRouterProtocol {
-    private(set) weak var view: ViewProtocol!
-    
-    init(_ view: ConverterViewProtocol) {
-        self.view = view
+extension ConverterRouter: ConverterRouterProtocol {
+    func presentCurrencySelect(from: UIViewController, currencies: [String:CurrencyData], completion: ((CurrencyData) -> Void)?) {
+        let viewController = CurrencySelectRouter.createModule(currencies: currencies, completion: completion)
+        let navigationController = NavigationController(rootViewController: viewController)
+        from.presentPanModal(navigationController)
     }
 }

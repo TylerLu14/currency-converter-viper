@@ -6,15 +6,9 @@
 //
 
 import Alamofire
-import RxSwift
-import RxCocoa
+import PromiseKit
 import Foundation
 import ObjectMapper
-
-public enum ServiceError: Error {
-    case cannotParseData
-    case currencyNotFound
-}
 
 extension ServiceError: LocalizedError {
     public var errorDescription: String? {
@@ -22,6 +16,47 @@ extension ServiceError: LocalizedError {
         case .cannotParseData: return "Cannot parse data"
         case .currencyNotFound: return "The convert currency cannot be found"
         }
+    }
+}
+
+public struct PMKAlamofireDataResponse {
+    public init<T,E>(_ rawrsp: Alamofire.DataResponse<T,E>) {
+        request = rawrsp.request
+        response = rawrsp.response
+        data = rawrsp.data
+    }
+
+    public let request: URLRequest?
+    public let response: HTTPURLResponse?
+    public let data: Data?
+}
+
+extension Alamofire.DataRequest {
+    typealias ResponseType = (value: Any, response: PMKAlamofireDataResponse)
+    func responseJSONAny(queue: DispatchQueue = .global(), options: JSONSerialization.ReadingOptions = .allowFragments) -> Promise<ResponseType> {
+        return Promise<ResponseType> { resolver in
+            responseJSON(queue: queue, options: options) { response in
+                print("Request:", String(describing: response.debugDescription))
+                print("Response:", String(describing: response.debugDescription))
+                
+                switch response.result {
+                case .success(let value):
+                    resolver.fulfill((value, PMKAlamofireDataResponse(response)))
+                case .failure(let error):
+                    resolver.reject(error)
+                }
+            }
+        }
+    }
+    
+    func responseJSON(queue: DispatchQueue = .global(), options: JSONSerialization.ReadingOptions = .allowFragments) -> Promise<(json: [String:Any], response: PMKAlamofireDataResponse)> {
+        responseJSONAny(queue: queue, options: options)
+            .then { json, rawResponse -> Promise<(json: [String:Any], response: PMKAlamofireDataResponse)> in
+                guard let json = json as? [String:Any] else {
+                    return Promise(error: ServiceError.cannotParseData)
+                }
+                return Promise.value((json, rawResponse))
+            }
     }
 }
 
@@ -40,48 +75,23 @@ class NetworkManager {
     }
 }
 
-protocol ServiceProtocol {
-    func request(urlRequest: URLRequestConvertible) -> Single<[String: Any]>
-}
 
 class Service {
     let networkManager = NetworkManager.sharedManager
     
-    func request(urlRequest: URLRequestConvertible) -> Single<[String: Any]> {
-        return Single<[String: Any]>.create { single in
-            let request = self.networkManager.alamofireSession.request(urlRequest)
-            request.responseJSON { response in
-                if let error = response.error {
-                    single(.failure(error))
-                    return
-                }
-
-                switch response.result {
-                case .failure(let error):
-                    single(.failure(error))
-                case .success(let json):
-                    guard let json = json as? [String: Any] else {
-                        single(.failure(ServiceError.cannotParseData))
-                        break
-                    }
-                    single(.success(json))
-                }
-            }
-            return Disposables.create { request.cancel() }
-        }
-        .subscribe(on: scheduler.concurrentUser)
-        .do(onError: { error in
-            print(error)
-        })
+    func request(urlRequest: Alamofire.URLRequestConvertible) -> Promise<[String: Any]> {
+        self.networkManager.alamofireSession.request(urlRequest)
+            .responseJSON(queue: .global(qos: .background))
+            .map { json, _ in json }
     }
     
-    func request<T:Mappable>(urlRequest: URLRequestConvertible) -> Single<T> {
+    func request<T:Mappable>(urlRequest: Alamofire.URLRequestConvertible) -> Promise<T> {
         request(urlRequest: urlRequest)
-            .flatMap{ json in
+            .then { json -> Promise<T> in
                 guard let response = Mapper<T>().map(JSON: json) else {
-                    return .error(ServiceError.cannotParseData)
+                    return Promise(error: ServiceError.cannotParseData)
                 }
-                return .just(response)
+                return .value(response)
             }
     }
 }
