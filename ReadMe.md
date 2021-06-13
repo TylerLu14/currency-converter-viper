@@ -78,13 +78,14 @@ protocol CurrencySelectRouterProtocol: AnyObject {
 
 ## Features:
 ### Fetch new exchange data at app launch and every hour after launch:
- <img width="285" alt="Screen Shot 2021-06-13 at 6 04 50 PM" src="https://user-images.githubusercontent.com/20063699/121804719-f5ac1b80-cc71-11eb-8e3c-a5ae33a6a7be.png">
+ <img width="300" alt="Screen Shot 2021-06-13 at 6 04 50 PM" src="https://user-images.githubusercontent.com/20063699/121804719-f5ac1b80-cc71-11eb-8e3c-a5ae33a6a7be.png">  <img width="300" alt="Screen Shot 2021-06-13 at 6 04 50 PM" src="https://user-images.githubusercontent.com/20063699/121804719-f5ac1b80-cc71-11eb-8e3c-a5ae33a6a7be.png">
  
 ### Currency Converter:
+<img width="300" alt="Screen Shot 2021-06-13 at 5 59 16 PM" src="https://user-images.githubusercontent.com/20063699/121804557-20e23b00-cc71-11eb-8e18-f24c63de4808.png">
  * Can accept different number formats: `1000`, `100.00`, `1,000,000` or even `100,00,,,000.00`
  * Can accept different number formats: `1000`, `100.00`, `1,000,000` or even `100,00,,,000.00`
  * Will not output anything if user forces to enter letters or wrong number format, eg `100.00.00`
-<img width="300" alt="Screen Shot 2021-06-13 at 5 59 16 PM" src="https://user-images.githubusercontent.com/20063699/121804557-20e23b00-cc71-11eb-8e18-f24c63de4808.png">
+
 
 ### Dark/Light Mode: Change to dark/light mode by pressing top-right corner button
 <img width="300" alt="Screen Shot 2021-06-13 at 5 59 16 PM" src="https://user-images.githubusercontent.com/20063699/121804746-1b392500-cc72-11eb-9379-c682ea47a009.png">
