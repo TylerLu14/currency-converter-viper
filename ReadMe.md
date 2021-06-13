@@ -25,9 +25,6 @@ Email: tyler.lu1401@gmail.com
   * 'PanModal'
   * 'Reusable'
 
-Features
-=======
-
 ## Design Pattern
  ### VIPER
  * Why VIPER?
@@ -105,6 +102,5 @@ protocol CurrencySelectRouterProtocol: AnyObject {
 ### Offline Mode:
 * If for some reason, the user cannot fetch data for the first time opening the app, they will be able to re-fetch the data by pressing refresh 
 <img width="300" alt="Screen Shot 2021-06-13 at 6 08 15 PM" src="https://user-images.githubusercontent.com/20063699/121804902-e2e61680-cc72-11eb-9693-e35367e3d6a9.png">
-![simulator_screenshot_80DD226F-0A42-43FA-BADD-C2B246B0846D]()
 * If there is some offline data fetched, the user will enter offline mode
- <img width="300" alt="Screen Shot 2021-06-13 at 6 08 15 PM" src="https://user-images.githubusercontent.com/20063699/121805041-8df6d000-cc73-11eb-8190-f0bfb2fe2bfa.png">
+<img width="300" alt="Screen Shot 2021-06-13 at 6 08 15 PM" src="https://user-images.githubusercontent.com/20063699/121805041-8df6d000-cc73-11eb-8190-f0bfb2fe2bfa.png">
