@@ -13,13 +13,11 @@ DerivedData/
 LICENSE
 
 **/.DS_Store
-**/*.md
 **/*.txt
 **/*.zip
 .DS_Store
 .build
 *.xcworkspace
-*.md
 *.txt
 *.zip
 *.generated.swift
