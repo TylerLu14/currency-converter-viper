@@ -1,6 +1,7 @@
 ## Summary
 
 Interviewee: Hoang Lu
+
 Email: tyler.lu1401@gmail.com
 
 ## Prerequisites
@@ -80,6 +81,8 @@ protocol CurrencySelectRouterProtocol: AnyObject {
 
 ### Features:
 * Currency Converter:
+<img width="396" alt="Screen Shot 2021-06-13 at 5 59 16 PM" src="https://user-images.githubusercontent.com/20063699/121804557-20e23b00-cc71-11eb-8e18-f24c63de4808.png">
+
 * Dark/Light Mode:
 * Select source and destination currencies from a PanModal
 * Swap the current selected currencies
