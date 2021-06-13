@@ -1,6 +1,7 @@
 ## Summary
 
 Interviewee: Hoang Lu
+
 Email: tyler.lu1401@gmail.com
 
 ## Prerequisites
@@ -23,9 +24,6 @@ Email: tyler.lu1401@gmail.com
   * 'R.swift'
   * 'PanModal'
   * 'Reusable'
-
-Features
-=======
 
 ## Design Pattern
  ### VIPER
@@ -78,11 +76,30 @@ protocol CurrencySelectRouterProtocol: AnyObject {
 }
  ```
 
-### Features:
-* Currency Converter:
-* Dark/Light Mode:
-* Select source and destination currencies from a PanModal
-* Swap the current selected currencies
-* Remember selected currencies:
-* Show the past fetched exchange rate (up to 10 entries)
-* Offline Mode:
+## Features:
+### Fetch new exchange data at app launch and every hour after launch:
+ <img width="300" alt="Screen Shot 2021-06-13 at 6 04 50 PM" src="https://user-images.githubusercontent.com/20063699/121804719-f5ac1b80-cc71-11eb-8e3c-a5ae33a6a7be.png">  <img width="300" alt="Screen Shot 2021-06-13 at 6 04 50 PM" src="https://user-images.githubusercontent.com/20063699/121804719-f5ac1b80-cc71-11eb-8e3c-a5ae33a6a7be.png">
+ 
+### Currency Converter:
+<img width="300" alt="Screen Shot 2021-06-13 at 5 59 16 PM" src="https://user-images.githubusercontent.com/20063699/121804557-20e23b00-cc71-11eb-8e18-f24c63de4808.png">
+ * Can accept different number formats: `1000`, `100.00`, `1,000,000` or even `100,00,,,000.00`
+ * Can accept different number formats: `1000`, `100.00`, `1,000,000` or even `100,00,,,000.00`
+ * Will not output anything if user forces to enter letters or wrong number format, eg `100.00.00`
+
+
+### Dark/Light Mode: Change to dark/light mode by pressing top-right corner button
+<img width="300" alt="Screen Shot 2021-06-13 at 5 59 16 PM" src="https://user-images.githubusercontent.com/20063699/121804746-1b392500-cc72-11eb-9379-c682ea47a009.png">
+
+### Select source and destination currencies: By pressing on the left of the input and output text fields
+<img width="300" alt="Screen Shot 2021-06-13 at 5 59 16 PM" src="https://user-images.githubusercontent.com/20063699/121804821-71a66380-cc72-11eb-9f24-9135bab6d0be.png">
+
+### Swap the current selected currencies
+<img width="300" alt="Screen Shot 2021-06-13 at 6 08 15 PM" src="https://user-images.githubusercontent.com/20063699/121804812-63f0de00-cc72-11eb-8f91-8855d550c153.png">
+
+### Show the past fetched exchange rate between the selected currencies (up to 10 entries)
+<img width="300" alt="Screen Shot 2021-06-13 at 6 08 15 PM" src="https://user-images.githubusercontent.com/20063699/121805072-b2eb4300-cc73-11eb-8cdd-29d4a9dc3c10.png">
+
+### Remember selected currencies:
+### Offline Mode:
+* If for some reason, the user cannot fetch data for the first time opening the app, they will be able to re-fetch the data by pressing refresh 
+* If there is some offline data fetched, the user will enter offline mode
