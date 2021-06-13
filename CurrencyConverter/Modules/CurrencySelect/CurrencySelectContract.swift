@@ -38,7 +38,7 @@ protocol CurrencySelectInteractorProtocol: AnyObject {
 
 //Interactor -> Presenter
 protocol CurrencySelectInteractorOutputProtocol: AnyObject {
-    func onCurrenciesUpdated(currencies: [String:CurrencyData])
+    func onCurrenciesUpdated(currencyModels: [CurrencyModel])
     func onStyleRestore(style: CollectionViewStyle)
 }
 

@@ -45,6 +45,12 @@ class CurrencyCell: UICollectionViewCell, Themeable, Reusable {
         return temp
     }()
     
+    lazy var exchangeRateLabel: UILabel = {
+        let temp = UILabel()
+        temp.font = R.font.montserratRegular(size: 16)
+        return temp
+    }()
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         setup()
@@ -61,17 +67,7 @@ class CurrencyCell: UICollectionViewCell, Themeable, Reusable {
         contentView.addSubview(iconImageView)
         contentView.addSubview(currencyCodeLabel)
         contentView.addSubview(currencyNameLabel)
-    }
-    
-    func updateLayout(for style: CollectionViewStyle, animated: Bool) {
-        if animated {
-            UIView.animate(withDuration: 0.5) {
-                self.layout(for: style)
-                self.layoutIfNeeded()
-            }
-        } else {
-            layout(for: style)
-        }
+        contentView.addSubview(exchangeRateLabel)
     }
     
     private func layout(for style: CollectionViewStyle) {
@@ -93,6 +89,12 @@ class CurrencyCell: UICollectionViewCell, Themeable, Reusable {
                 make.leading.equalTo(iconImageView.snp.trailing).offset(24)
                 make.trailing.equalToSuperview().inset(24)
                 make.top.equalTo(currencyCodeLabel.snp.bottom).offset(4)
+            }
+            
+            exchangeRateLabel.snp.remakeConstraints { make in
+                make.leading.equalTo(iconImageView.snp.trailing).offset(24)
+                make.trailing.equalToSuperview().inset(24)
+                make.top.equalTo(currencyNameLabel.snp.bottom).offset(4)
                 make.bottom.equalToSuperview().inset(8)
             }
             
@@ -107,7 +109,18 @@ class CurrencyCell: UICollectionViewCell, Themeable, Reusable {
                 make.leading.trailing.equalToSuperview().inset(8)
             }
             currencyNameLabel.snp.removeConstraints()
-            
+            exchangeRateLabel.snp.removeConstraints()
+        }
+    }
+    
+    func updateLayout(for style: CollectionViewStyle, animated: Bool) {
+        if animated {
+            UIView.animate(withDuration: 0.5) {
+                self.layout(for: style)
+                self.layoutIfNeeded()
+            }
+        } else {
+            layout(for: style)
         }
     }
     
@@ -118,21 +131,25 @@ class CurrencyCell: UICollectionViewCell, Themeable, Reusable {
 
         currencyCodeLabel.textColor = theme.primaryTextColor
         currencyNameLabel.textColor = theme.secondaryTextColor
+        exchangeRateLabel.textColor = theme.secondaryTextColor
     }
     
-    func updateCell(currencyData: CurrencyData, style: CollectionViewStyle) {
-        iconImageView.image = UIImage(named: currencyData.code.lowercased())
-        currencyNameLabel.text = currencyData.name
+    func updateCell(currencyModel: CurrencyModel, style: CollectionViewStyle) {
+        iconImageView.image = currencyModel.image
+        currencyNameLabel.text = currencyModel.data.name
+        exchangeRateLabel.text = currencyModel.exchangeRateText
         
         switch style {
         case .list:
             currencyCodeLabel.textAlignment = .left
             currencyNameLabel.isHidden = false
-            currencyCodeLabel.text = "\(currencyData.symbol) - \(currencyData.code)"
+            exchangeRateLabel.isHidden = false
+            currencyCodeLabel.text = "\(currencyModel.data.symbol) - \(currencyModel.data.code)"
         case .grid:
-            currencyCodeLabel.text = currencyData.code
+            currencyCodeLabel.text = currencyModel.data.code
             currencyCodeLabel.textAlignment = .center
             currencyNameLabel.isHidden = true
+            exchangeRateLabel.isHidden = true
         }
         self.style = style
     }

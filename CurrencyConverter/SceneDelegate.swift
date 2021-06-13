@@ -20,7 +20,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         self.window = UIWindow(windowScene: windowScene)
         window?.rootViewController =  NavigationController(
-            rootViewController: ConverterRouter.createModule(service: CurrencyLayerService.shared)
+            rootViewController: ConverterRouter.createModule(exchangeService: CurrencyLayerService.shared, fileService: FileService.shared)
         )
         window?.makeKeyAndVisible()
     }

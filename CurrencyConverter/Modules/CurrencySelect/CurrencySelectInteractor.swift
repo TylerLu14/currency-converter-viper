@@ -11,16 +11,16 @@ import PromiseKit
 
 final class CurrencySelectInteractor: CurrencySelectInteractorProtocol {
     var presenter: CurrencySelectInteractorOutputProtocol?
-    var currencies: [String:CurrencyData]
+    var currencyModels: [CurrencyModel]
     
     var stylePersistent = Persistent<CollectionViewStyle>(key: "CurrencyListStyle", defaultValue: .list)
     
-    init(currencies: [String:CurrencyData]) {
-        self.currencies = currencies
+    init(currencyModels: [CurrencyModel]) {
+        self.currencyModels = currencyModels
     }
     
     func loadCurrencies() {
-        presenter?.onCurrenciesUpdated(currencies: currencies)
+        presenter?.onCurrenciesUpdated(currencyModels: currencyModels)
     }
     
     func loadViewStyle() {

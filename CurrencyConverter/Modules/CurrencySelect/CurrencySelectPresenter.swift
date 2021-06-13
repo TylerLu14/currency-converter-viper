@@ -19,11 +19,11 @@ class CurrencySelectPresenter: NSObject, CurrencySelectPresenterProtocol {
     var router: CurrencySelectRouterProtocol?
     
     var viewStyle: CollectionViewStyle = .list
-    var dataSource: [[CurrencyData]] = []
+    var dataSource: [[CurrencyModel]] = []
     
-    var selectCurrencyCompletion: ((CurrencyData) -> Void)? = nil
+    var selectCurrencyCompletion: ((CurrencyModel) -> Void)? = nil
     
-    init(completion: ((CurrencyData) -> Void)?) {
+    init(completion: ((CurrencyModel) -> Void)?) {
         self.selectCurrencyCompletion = completion
     }
     
@@ -44,11 +44,8 @@ class CurrencySelectPresenter: NSObject, CurrencySelectPresenterProtocol {
 }
 
 extension CurrencySelectPresenter: CurrencySelectInteractorOutputProtocol {
-    func onCurrenciesUpdated(currencies: [String:CurrencyData]) {
-        let sortedCurrencies = currencies.map{ code, currencyData in currencyData }
-            .sorted{ $0.code < $1.code }
-        
-        dataSource = [sortedCurrencies]
+    func onCurrenciesUpdated(currencyModels: [CurrencyModel]) {
+        dataSource = [currencyModels.sorted(by: { $0.data.code < $1.data.code })]
         view?.reloadData()
     }
     
@@ -59,15 +56,32 @@ extension CurrencySelectPresenter: CurrencySelectInteractorOutputProtocol {
     }
 }
 
-extension CurrencySelectPresenter: UICollectionViewDataSource, UICollectionViewDelegate {
+extension CurrencySelectPresenter: UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        guard let layout = collectionViewLayout as? UICollectionViewFlowLayout else {
+            return collectionViewLayout.collectionViewContentSize
+        }
+        
+        guard case .list = self.viewStyle else {
+            return layout.itemSize
+        }
+        
+        let currencyModel = dataSource[indexPath.section][indexPath.row]
+        if currencyModel.exchangeRateText != nil {
+            return CGSize(width: layout.itemSize.width, height: layout.itemSize.height + 16)
+        } else {
+            return layout.itemSize
+        }
+    }
+    
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         dataSource[section].count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(for: indexPath, cellType: CurrencyCell.self)
-        let currencyData = dataSource[indexPath.section][indexPath.row]
-        cell.updateCell(currencyData: currencyData, style: viewStyle)
+        let currencyModel = dataSource[indexPath.section][indexPath.row]
+        cell.updateCell(currencyModel: currencyModel, style: viewStyle)
         return cell
     }
     

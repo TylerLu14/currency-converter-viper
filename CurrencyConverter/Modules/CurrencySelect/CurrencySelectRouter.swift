@@ -9,12 +9,12 @@ import Foundation
 import UIKit
 
 class CurrencySelectRouter {
-    static func createModule(currencies: [String:CurrencyData], completion: ((CurrencyData) -> Void)? = nil) -> CurrencySelectViewController {
+    static func createModule(currencies: [CurrencyModel], completion: ((CurrencyModel) -> Void)? = nil) -> CurrencySelectViewController {
         
         let view = CurrencySelectViewController()
         
         let presenter: CurrencySelectPresenterProtocol & CurrencySelectInteractorOutputProtocol = CurrencySelectPresenter(completion: completion)
-        let interactor: CurrencySelectInteractorProtocol = CurrencySelectInteractor(currencies: currencies)
+        let interactor: CurrencySelectInteractorProtocol = CurrencySelectInteractor(currencyModels: currencies)
         let router: CurrencySelectRouterProtocol = CurrencySelectRouter()
         
         view.presenter = presenter

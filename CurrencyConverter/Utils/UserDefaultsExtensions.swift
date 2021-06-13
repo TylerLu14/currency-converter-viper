@@ -32,7 +32,6 @@ extension UserDefaults {
         if let json = self.object(forKey: key) as? [String: AnyObject] {
             return Mapper<T>().map(JSON: json)
         }
-
         return nil
     }
 

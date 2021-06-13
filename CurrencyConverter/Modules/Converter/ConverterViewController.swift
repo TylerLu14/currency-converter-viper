@@ -30,6 +30,21 @@ final class ConverterViewController: BaseViewController {
         return temp
     }()
     
+    lazy var offlineLabel: UILabel = {
+        let temp = UILabel()
+        temp.numberOfLines = 0
+        temp.font = R.font.montserratMedium(size: 14)
+        temp.text = "  --Offline Mode--  "
+        return temp
+    }()
+    
+    lazy var fetchTimestampLabel: UILabel = {
+        let temp = UILabel()
+        temp.numberOfLines = 0
+        temp.font = R.font.montserratRegular(size: 14)
+        return temp
+    }()
+    
     lazy var fromTextField: CurrencyTextField = {
         let temp = CurrencyTextField()
         return temp
@@ -67,6 +82,17 @@ final class ConverterViewController: BaseViewController {
         return temp
     }()
     
+    private lazy var exchangeRatesStack: UIStackView = {
+        let temp = UIStackView()
+        temp.axis = .vertical
+        temp.spacing = 8
+        temp.alignment = .fill
+        temp.distribution = .fill
+        return temp
+    }()
+    
+    var entryLabels: [UILabel] = []
+    
     lazy var keyboardFollower = KeyboardFollower()
     
     override func loadView() {
@@ -75,19 +101,33 @@ final class ConverterViewController: BaseViewController {
         view.backgroundColor = .white
         
         view.addSubview(titleLabel)
+        view.addSubview(offlineLabel)
+        view.addSubview(fetchTimestampLabel)
         view.addSubview(fromTextField)
         view.addSubview(switchButton)
         view.addSubview(toTextField)
         view.addSubview(convertButton)
         view.addSubview(errorLabel)
+        view.addSubview(exchangeRatesStack)
         
         titleLabel.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide.snp.top).offset(8)
             make.leading.trailing.equalToSuperview().inset(24)
         }
         
+        offlineLabel.snp.makeConstraints { make in
+            make.top.equalTo(titleLabel.snp.bottom).offset(8)
+            make.leading.equalToSuperview().inset(24)
+            make.height.equalTo(16)
+        }
+        
+        fetchTimestampLabel.snp.makeConstraints { make in
+            make.top.equalTo(offlineLabel.snp.bottom).offset(8)
+            make.leading.trailing.equalToSuperview().inset(24)
+        }
+        
         fromTextField.snp.makeConstraints{ make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(48)
+            make.top.equalTo(fetchTimestampLabel.snp.bottom).offset(48)
             make.leading.trailing.equalToSuperview().inset(24)
             make.height.equalTo(48)
         }
@@ -113,6 +153,11 @@ final class ConverterViewController: BaseViewController {
             make.top.equalTo(errorLabel.snp.bottom).offset(8)
             make.leading.trailing.equalToSuperview().inset(24)
             make.height.equalTo(56)
+        }
+        
+        exchangeRatesStack.snp.makeConstraints { make in
+            make.top.equalTo(convertButton.snp.bottom).offset(16)
+            make.leading.trailing.equalToSuperview().inset(24)
         }
     }
 
@@ -163,6 +208,9 @@ final class ConverterViewController: BaseViewController {
         super.refreshTheme(theme: theme)
         
         titleLabel.textColor = theme.primaryTextColor
+        offlineLabel.textColor = theme.textOnYellowColor
+        offlineLabel.backgroundColor = theme.buttonBackgroundColor
+        fetchTimestampLabel.textColor = theme.secondaryTextColor
         
         convertButton.setBackgroundImage(theme.buttonBackgroundColor.toImage(), for: .normal)
         convertButton.setBackgroundImage(theme.highlightedNuttonBackgroundColor.toImage(), for: .highlighted)
@@ -179,7 +227,7 @@ final class ConverterViewController: BaseViewController {
     }
     
     @objc func onTextChanged(fromTextField: UITextField) {
-        presenter?.fromTextChanged(text: fromTextField.text)
+        presenter?.sourceTextChanged(text: fromTextField.text)
     }
     
     @objc func onTapped(convertButton: UIButton) {
@@ -187,11 +235,15 @@ final class ConverterViewController: BaseViewController {
     }
     
     @objc func onTapped(fromCurrencyGesture: UIGestureRecognizer) {
-        presenter?.showFromSelectCurrency(viewController: self)
+        presenter?.showSourceSelectCurrency(viewController: self) { [weak self] currencyModel in
+            self?.presenter?.selectCurrency(source: currencyModel.data)
+        }
     }
     
     @objc func onTapped(toCurrencyGesture: UIGestureRecognizer) {
-        presenter?.showToSelectCurrency(viewController: self)
+        presenter?.showDestinationSelectCurrency(viewController: self) { [weak self] currencyModel in
+            self?.presenter?.selectCurrency(destination: currencyModel.data)
+        }
     }
     
     @objc func onTapped(themeButton: UIButton) {
@@ -215,6 +267,17 @@ final class ConverterViewController: BaseViewController {
 }
 
 extension ConverterViewController: ConverterViewProtocol {
+    func updateOfflineLabel(isOffline: Bool) {
+        offlineLabel.isHidden = !isOffline
+        offlineLabel.snp.updateConstraints{ make in
+            make.height.equalTo(isOffline ? 24 : 0)
+        }
+    }
+    
+    func updateTimeStampLabel(text: String?) {
+        fetchTimestampLabel.text = text
+    }
+    
     func updateErrorLabel(text: String?) {
         errorLabel.text = text
     }
@@ -224,18 +287,40 @@ extension ConverterViewController: ConverterViewProtocol {
         convertButton.setTitle(text, for: .normal)
     }
     
-    func updateFromCurrency(with currency: CurrencyData) {
-        fromTextField.currency = currency.code
-        fromTextField.currencyImage = UIImage(named: currency.code.lowercased())
+    func updateSourceCurrency(with currency: CurrencyData?) {
+        fromTextField.currency = currency?.code
+        fromTextField.currencyImage = UIImage(named: currency?.code.lowercased() ?? "flag")
     }
     
-    func updateToCurrency(with currency: CurrencyData) {
-        toTextField.currency = currency.code
-        toTextField.currencyImage = UIImage(named: currency.code.lowercased())
+    func updateDestinationCurrency(with currency: CurrencyData?) {
+        toTextField.currency = currency?.code
+        toTextField.currencyImage = UIImage(named: currency?.code.lowercased() ?? "flag")
     }
     
     func updateResult(fromText: String?, toText: String?) {
         fromTextField.text = fromText
         toTextField.text = toText
+    }
+    
+    func updateExchangeRates(with entries: [String]) {
+        
+        exchangeRatesStack.arrangedSubviews.forEach{ subview in
+            exchangeRatesStack.removeArrangedSubview(subview)
+            subview.removeFromSuperview()
+        }
+        
+        entryLabels = entries.map{ generateEntryLabel(text: $0) }
+        entryLabels.forEach{ exchangeRatesStack.addArrangedSubview($0) }
+        exchangeRatesStack.layoutIfNeeded()
+        view.layoutIfNeeded()
+    }
+    
+    func generateEntryLabel(text: String) -> UILabel {
+        let label = UILabel()
+        label.numberOfLines = 0
+        label.font = R.font.montserratRegular(size: 14)
+        label.text = text
+        label.textColor = ThemeManager.shared.currentTheme.secondaryTextColor
+        return label
     }
 }

@@ -8,16 +8,36 @@
 import Foundation
 import ObjectMapper
 
-struct CurrencyData: Mappable {
-    var symbol: String
-    var name: String
-    var symbolNative: String
-    var decimalDigits: Int
-    var rounding: String
-    var code: String
-    var namePlural: String
+public struct CurrencyData: Mappable, Persistable {
+    public var symbol: String
+    public var name: String
+    public var symbolNative: String
+    public var decimalDigits: Int
+    public var rounding: String
+    public var code: String
+    public var namePlural: String
     
-    init?(map: Map) {
+    static let usd = CurrencyData(JSON: [
+        "symbol": "$",
+        "name": "US Dollar",
+        "symbol_native": "$",
+        "decimal_digits": 2,
+        "rounding": 0,
+        "code": "USD",
+        "name_plural": "US dollars"
+    ])!
+    
+    static let vnd = CurrencyData(JSON: [
+        "symbol": "₫",
+        "name": "Vietnamese Dong",
+        "symbol_native": "₫",
+        "decimal_digits": 0,
+        "rounding": 0,
+        "code": "VND",
+        "name_plural": "Vietnamese dong"
+    ])!
+    
+    public init?(map: Map) {
         symbol = ""
         name = ""
         symbolNative = ""
@@ -27,7 +47,7 @@ struct CurrencyData: Mappable {
         namePlural = ""
     }
     
-    mutating func mapping(map: Map) {
+    public mutating func mapping(map: Map) {
         symbol <- map["symbol"]
         name <- map["name"]
         symbolNative <- map["symbol_native"]

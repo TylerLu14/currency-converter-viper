@@ -10,12 +10,12 @@ import UIKit
 import PanModal
 
 class ConverterRouter {
-    static func createModule(service: CurrencyLayerServiceProtocol) -> ConverterViewController {
+    static func createModule(exchangeService: CurrencyLayerServiceProtocol, fileService: FileServiceProtocol) -> ConverterViewController {
         
         let view = ConverterViewController()
         
         let presenter: ConverterPresenterProtocol & ConverterInteractorOutputProtocol = ConverterPresenter()
-        let interactor: ConverterInteractorProtocol = ConverterInteractor(service: service)
+        let interactor: ConverterInteractorProtocol = ConverterInteractor(exchangeService: exchangeService, fileService: fileService)
         let router: ConverterRouterProtocol = ConverterRouter()
         
         view.presenter = presenter
@@ -31,8 +31,8 @@ class ConverterRouter {
 
 
 extension ConverterRouter: ConverterRouterProtocol {
-    func presentCurrencySelect(from: UIViewController, currencies: [String:CurrencyData], completion: ((CurrencyData) -> Void)?) {
-        let viewController = CurrencySelectRouter.createModule(currencies: currencies, completion: completion)
+    func presentCurrencySelect(from: UIViewController, currencyModels: [CurrencyModel], completion: ((CurrencyModel) -> Void)?) {
+        let viewController = CurrencySelectRouter.createModule(currencies: currencyModels)
         let navigationController = NavigationController(rootViewController: viewController)
         from.presentPanModal(navigationController)
     }

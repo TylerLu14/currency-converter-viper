@@ -27,14 +27,14 @@ final class CurrencySelectViewController: BaseViewController {
     private lazy var gridLayout: UICollectionViewFlowLayout = {
         let collectionFlowLayout = UICollectionViewFlowLayout()
         collectionFlowLayout.scrollDirection = .vertical
-        collectionFlowLayout.itemSize = CGSize(width: UIScreen.main.bounds.width / 3 - 16, height: 64)
+        collectionFlowLayout.itemSize = CGSize(width: UIScreen.main.bounds.width / 3 - 16, height: 82)
         collectionFlowLayout.minimumInteritemSpacing = 8
-        collectionFlowLayout.minimumLineSpacing = 16
+        collectionFlowLayout.minimumLineSpacing = 8
         return collectionFlowLayout
     }()
     
     private lazy var collectionView: UICollectionView = {
-        let temp = UICollectionView(frame: .zero, collectionViewLayout: listLayout )
+        let temp = UICollectionView(frame: .zero, collectionViewLayout: listLayout)
         return temp
     }()
     

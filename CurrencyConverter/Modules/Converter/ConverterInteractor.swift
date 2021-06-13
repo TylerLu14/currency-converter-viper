@@ -9,12 +9,6 @@ import Foundation
 import ObjectMapper
 import PromiseKit
 
-struct Currency {
-    let source: String
-    let image: UIImage?
-    let name: String
-}
-
 extension NumberFormatter {
     func string(from decimal: Decimal) -> String? {
         string(from: decimal as NSDecimalNumber)
@@ -29,105 +23,183 @@ extension NumberFormatter {
     }
 }
 
-final class ConverterInteractor: ConverterInteractorProtocol {
-    var presenter: ConverterInteractorOutputProtocol?
-    let service: CurrencyLayerServiceProtocol
+public struct ConverterState {
+    public var timestamp: TimeInterval
+    public var timestampDate: Date {
+        return Date(timeIntervalSince1970: timestamp)
+    }
+    public var timestampDisplay: String {
+        "Last fetched exchange rate data:\n\(DateFormatter.standard.string(from: timestampDate))"
+    }
     
-    var liveQuotes: LiveQuotesResponse?
+    public var exchangeData: ExchangeData
+    public var currencies: [String:CurrencyData]
+    
+    public var sourceCurrency: CurrencyData?
+    public var destinationCurrency: CurrencyData?
+    public var exchangeEntries: [ExchangeRateHistoryEntry]
+    
+    public init(timestamp: TimeInterval,
+                exchangeData: ExchangeData,
+                currencies: [String:CurrencyData],
+                sourceCurrency: CurrencyData?,
+                destinationCurrency: CurrencyData?,
+                exchangeEntries: [ExchangeRateHistoryEntry]) {
+        self.timestamp = timestamp
+        self.exchangeData = exchangeData
+        self.currencies = currencies
+        self.sourceCurrency = sourceCurrency
+        self.destinationCurrency = destinationCurrency
+        self.exchangeEntries = exchangeEntries
+    }
+    
+    public func exchangeRate(from source: String?, to destination: String?) -> Decimal? {
+        guard let source = source, let destination = destination else {
+            return nil
+        }
+        return exchangeData.getRate(from: source, to: destination)
+    }
+}
+
+public enum AsyncState {
+    case ready
+    case loading
+    case success(ConverterState)
+    case offline(ConverterState)
+    case failure(Error)
+    
+    var isOffline: Bool {
+        switch self {
+        case .offline:
+            return true
+        default:
+            return false
+        }
+    }
+}
+
+public class ConverterInteractor {
+    typealias ExchangeDataResponse = (record: ExchangeDataRecord, isOffline: Bool)
+    
+    var timer: Timer?
+    
+    public var presenter: ConverterInteractorOutputProtocol?
+    
+    let exchangeService: CurrencyLayerServiceProtocol
+    let fileService: FileServiceProtocol
+    
+    var exchangeData: ExchangeData?
     var currencies: [String:CurrencyData] = [:]
     
-    var liveQuoteTimestampPersistent = Persistent<Double>(key: "LiveQuoteTimestamp", defaultValue: 0)
-    var liveQuotePersistent = Persistent<LiveQuotesResponse?>(key: "LiveQuote", defaultValue: nil)
+    var exchangeDataHistory = Persistent<ExchangeDataHistory>(key: "ExchangeDataHistory", defaultValue: .init(records: []))
+    var latestExchangeRecordPersistent = Persistent<ExchangeDataRecord?>(key: "LatestExchangeRecord", defaultValue: nil)
     
-    init(service: CurrencyLayerServiceProtocol) {
-        self.service = service
+    var sourcePersistent = Persistent<CurrencyData>(key: "SourceCurrency", defaultValue: .usd)
+    var destinationPersistent = Persistent<CurrencyData>(key: "DestinationCurrency", defaultValue: .vnd)
+    
+    public init(exchangeService: CurrencyLayerServiceProtocol, fileService: FileServiceProtocol) {
+        self.exchangeService = exchangeService
+        self.fileService = fileService
     }
     
-    private func readCurrencyFile() -> Promise<[String:CurrencyData]> {
-        Promise { resolver in
-            do {
-                guard let url = R.file.currenciesJson() else {
-                    resolver.reject(FileError.fileNotFound)
-                    return
+    private func fetchExchangeData() -> Promise<ExchangeDataResponse> {
+        exchangeService.fetchExchangeData()
+            .map{ exchangeData in
+                let newRecord = ExchangeDataRecord(
+                    exchangeData: exchangeData,
+                    timestamp: Date().timeIntervalSince1970
+                )
+                return ExchangeDataResponse(record: newRecord, isOffline: false)
+            }
+            .get{ exchangeDataResponse in
+                self.latestExchangeRecordPersistent.value = exchangeDataResponse.record
+            }
+            .recover{ error -> Promise<ExchangeDataResponse> in
+                guard let latestRecord = self.latestExchangeRecordPersistent.value else { return
+                    Promise(error: error)
                 }
-                guard let jsonData = try String(contentsOf: url).data(using: .utf8) else {
-                    resolver.reject(FileError.cannotReadJsonFile)
-                    return
-                }
-                
-                let jsonRaw = try JSONSerialization.jsonObject(with: jsonData, options: .allowFragments)
-                
-                guard let json = jsonRaw as? [String:[String:Any]] else {
-                    resolver.reject(FileError.cannotParseJson)
-                    return
-                }
-                var currencyDataDict: [String:CurrencyData] = [:]
-                json.forEach{ code, currencyJson in
-                    currencyDataDict[code] = CurrencyData(JSON: currencyJson)
-                }
-                resolver.fulfill(currencyDataDict)
-            } catch {
-                resolver.reject(error)
+                return .value(ExchangeDataResponse(record: latestRecord, isOffline: true))
+            }
+    }
+    
+    private func startFetchingTimer() {
+        timer = Timer(timeInterval: 60, repeats: true) { [weak self] _ in
+            guard let self = self, let latestRecord = self.latestExchangeRecordPersistent.value,
+                  latestRecord.timestamp < Date().timeIntervalSince1970 - 3600 else {
+                return
+            }
+            firstly { () -> Promise<ExchangeDataResponse> in
+                self.presenter?.onLiveQuotesFetched(state: .loading)
+                return self.fetchExchangeData()
+            }
+            .done { exchangeDataResponse in
+                self.handleExchangeData(exchangeDataResponse: exchangeDataResponse, currencies: self.currencies)
+            }
+            .catch { error in
+                self.presenter?.onLiveQuotesFetched(state: .failure(error))
             }
         }
+        timer?.fire()
+        RunLoop.main.add(timer!, forMode: .common)
     }
     
-    private func fetchQuotesData() -> Promise<LiveQuotesResponse> {
-        guard let liveQuotes = liveQuotePersistent.value, liveQuoteTimestampPersistent.value > Date().timeIntervalSince1970 - 3600 else {
-            return service.fetchLiveQuotes()
-                .get{ liveQuotes in
-                    self.liveQuotePersistent.value = liveQuotes
-                    self.liveQuoteTimestampPersistent.value = Date().timeIntervalSince1970
-                }
+    private func handleExchangeData(exchangeDataResponse: ExchangeDataResponse, currencies: [String:CurrencyData]) {
+        let availableRates = exchangeDataResponse.record.exchangeData.rates
+        var availableCurrencies: [String:CurrencyData] = [:]
+        currencies.forEach{ code, currencyData in
+            guard availableRates[code] != nil else {
+                return
+            }
+            availableCurrencies[code] = currencyData
         }
+        self.currencies = availableCurrencies
+        self.exchangeData = exchangeDataResponse.record.exchangeData
         
-        return .value(liveQuotes)
-    }
-    
-    func preloadData() {
-        firstly { () -> Promise<(LiveQuotesResponse, [String:CurrencyData])> in
-            presenter?.onLiveQuotesFetched(state: .loading)
-            return when(fulfilled: fetchQuotesData(), readCurrencyFile())
+        let currentRecords: [ExchangeDataRecord] = self.exchangeDataHistory.value.records.enumerated().compactMap{ index, record in
+            guard index < 9 else { return nil }
+            return record
         }
-        .done { liveQuotes, currencies in
-            let availableRates = liveQuotes.rates
-            var availableCurrencies: [String:CurrencyData] = [:]
-            currencies.forEach{ code, currencyData in
-                guard availableRates[code] != nil else {
-                    return
-                }
-                availableCurrencies[code] = currencyData
-            }
-            
-            self.currencies = availableCurrencies
-            self.liveQuotes = liveQuotes
-            self.presenter?.onLiveQuotesFetched(state: .success(availableCurrencies))
+        self.exchangeDataHistory.value = ExchangeDataHistory(records: currentRecords + [exchangeDataResponse.record])
+        self.latestExchangeRecordPersistent.value = exchangeDataResponse.record
+        
+        let entries = self.exchangeDataHistory.value.getExchangeHistoryEntries(
+            source: self.sourcePersistent.value,
+            destination: self.destinationPersistent.value
+        )
+        
+        let state = ConverterState(
+            timestamp: exchangeDataResponse.record.timestamp,
+            exchangeData: exchangeDataResponse.record.exchangeData,
+            currencies: availableCurrencies,
+            sourceCurrency: self.sourcePersistent.value,
+            destinationCurrency: self.destinationPersistent.value,
+            exchangeEntries: entries
+        )
+        if exchangeDataResponse.isOffline {
+            self.presenter?.onLiveQuotesFetched(state: .offline(state))
+        } else {
+            self.presenter?.onLiveQuotesFetched(state: .success(state))
+        }
+    }
+}
+
+extension ConverterInteractor: ConverterInteractorProtocol {
+    public func preloadData() {
+        firstly { () -> Promise<(ExchangeDataResponse, [String:CurrencyData])> in
+            presenter?.onLiveQuotesFetched(state: .loading)
+            return when(fulfilled: fetchExchangeData(), fileService.readCurrencyFile())
+        }
+        .done { exchangeDataResponse, currencies in
+            self.handleExchangeData(exchangeDataResponse: exchangeDataResponse, currencies: currencies)
+            self.startFetchingTimer()
         }
         .catch { error in
             self.presenter?.onLiveQuotesFetched(state: .failure(error))
+            self.startFetchingTimer()
         }
     }
     
-    func getRate(with liveQuotes: LiveQuotesResponse, fromCurrency: String, toCurrency: String) -> Decimal? {
-        if let rate = liveQuotes.quotes["\(fromCurrency)\(toCurrency)"] {
-            return NSNumber(value: rate).decimalValue
-        }
-        
-        if let rate = liveQuotes.quotes["\(toCurrency)\(fromCurrency)"], rate > 0 {
-            return 1 / NSNumber(value: rate).decimalValue
-        }
-        
-        let source = liveQuotes.source
-        if let sourceToFromRate = liveQuotes.quotes["\(source)\(fromCurrency)"],
-           let sourceToToRate = liveQuotes.quotes["\(source)\(toCurrency)"],
-           sourceToFromRate > 0 {
-            return NSNumber(value: sourceToToRate).decimalValue / NSNumber(value: sourceToFromRate).decimalValue
-        }
-        
-        return nil
-    }
-    
-    func convert(inputText: String?, fromCurrency: String?, toCurrency: String?) {
+    public func convert(inputText: String?, fromCurrency: String?, toCurrency: String?) {
         guard let fromCurrency = fromCurrency, let toCurrency = toCurrency else {
             return
         }
@@ -137,8 +209,7 @@ final class ConverterInteractor: ConverterInteractorProtocol {
         
         guard let inputText = inputText?.replacingOccurrences(of: Locale.current.groupingSeparator ?? "", with: ""),
               let value = fromNumberFormatter.number(from: inputText)?.decimalValue,
-              let liveQuotes = liveQuotes,
-              let rate = getRate(with: liveQuotes, fromCurrency: fromCurrency, toCurrency: toCurrency) else {
+              let rate = exchangeData?.getRate(from: fromCurrency, to: toCurrency) else {
             return
         }
         
@@ -148,5 +219,16 @@ final class ConverterInteractor: ConverterInteractorProtocol {
         }
         
         presenter?.onConvertSuccess(fromResult: fromResult, toResult: toResult)
+    }
+    
+    public func onSelectedCurrencyChanged(source: CurrencyData?, destination: CurrencyData?) {
+        if let source = source {
+            sourcePersistent.value = source
+        }
+        if let destination = destination {
+            destinationPersistent.value = destination
+        }
+        let entries = self.exchangeDataHistory.value.getExchangeHistoryEntries(source: source, destination: destination)
+        presenter?.onHistoryListUpdated(exchangeRateHistoryEntries: entries)
     }
 }

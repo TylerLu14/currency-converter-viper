@@ -16,11 +16,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if #available(iOS 13.0, *) {
             //do nothing we will have a code in SceneceDelegate for this
         } else {
-            window = UIWindow(frame: UIScreen.main.bounds)
-            window?.rootViewController = NavigationController(
-                rootViewController: ConverterRouter.createModule(service: CurrencyLayerService.shared)
-            )
-            window?.makeKeyAndVisible()
+//            window = UIWindow(frame: UIScreen.main.bounds)
+//            window?.rootViewController = NavigationController(
+//                rootViewController: ConverterRouter.createModule(exchangeService: CurrencyLayerService.shared, fileService: FileService.shared)
+//            )
+//            window?.makeKeyAndVisible()
         }
         
         ThemeManager.shared.onThemeUpdated(theme: ThemeManager.shared.currentTheme)
