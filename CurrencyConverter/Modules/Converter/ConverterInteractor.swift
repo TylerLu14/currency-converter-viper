@@ -103,23 +103,29 @@ public class ConverterInteractor {
     }
     
     private func fetchExchangeData() -> Promise<ExchangeDataResponse> {
-        exchangeService.fetchExchangeData()
-            .map{ exchangeData in
-                let newRecord = ExchangeDataRecord(
-                    exchangeData: exchangeData,
-                    timestamp: Date().timeIntervalSince1970
-                )
-                return ExchangeDataResponse(record: newRecord, isOffline: false)
-            }
-            .get{ exchangeDataResponse in
-                self.latestExchangeRecordPersistent.value = exchangeDataResponse.record
-            }
-            .recover{ error -> Promise<ExchangeDataResponse> in
-                guard let latestRecord = self.latestExchangeRecordPersistent.value else { return
-                    Promise(error: error)
+        guard let latestRecord = self.latestExchangeRecordPersistent.value,
+              latestRecord.timestamp < Date().timeIntervalSince1970 - 3600 else {
+            
+            return exchangeService.fetchExchangeData()
+                .map{ exchangeData in
+                    let newRecord = ExchangeDataRecord(
+                        exchangeData: exchangeData,
+                        timestamp: Date().timeIntervalSince1970
+                    )
+                    return ExchangeDataResponse(record: newRecord, isOffline: false)
                 }
-                return .value(ExchangeDataResponse(record: latestRecord, isOffline: true))
-            }
+                .get{ exchangeDataResponse in
+                    self.latestExchangeRecordPersistent.value = exchangeDataResponse.record
+                }
+                .recover{ error -> Promise<ExchangeDataResponse> in
+                    guard let latestRecord = self.latestExchangeRecordPersistent.value else { return
+                        Promise(error: error)
+                    }
+                    return .value(ExchangeDataResponse(record: latestRecord, isOffline: true))
+                }
+        }
+        
+        return .value(ExchangeDataResponse(record: latestRecord, isOffline: false))
     }
     
     private func startFetchingTimer() {
