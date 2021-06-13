@@ -75,6 +75,9 @@ protocol CurrencySelectRouterProtocol: AnyObject {
     
 }
  ```
+## UIs:
+* All UI compements are generated in codes because I'm not a fan of storyboard.
+* Dark/Light mode is implemented in a way that user can update them in real time. The ThemeManager will automatically look for all presented UIViewController and UIView to update their colors accordingly.
 
 ## Features:
 ### Fetch new exchange data at app launch and every hour after launch:
