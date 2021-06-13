@@ -104,3 +104,8 @@ protocol CurrencySelectRouterProtocol: AnyObject {
 ### Offline Mode:
 * If for some reason, the user cannot fetch data for the first time opening the app, they will be able to re-fetch the data by pressing refresh 
 * If there is some offline data fetched, the user will enter offline mode
+
+### Unit Tests:
+* I have thrown in some tests for ConverterPresenter and ConverterInteractor.
+* ConvertView doesn't need testings because all the UI logics are written in Presenter
+* Router is rather too simple to be tested
