@@ -95,12 +95,10 @@ protocol CurrencySelectRouterProtocol: AnyObject {
 ### Swap the current selected currencies
 <img width="300" alt="Screen Shot 2021-06-13 at 6 08 15 PM" src="https://user-images.githubusercontent.com/20063699/121804812-63f0de00-cc72-11eb-8f91-8855d550c153.png">
 
-### Remember selected currencies:
 ### Show the past fetched exchange rate between the selected currencies (up to 10 entries)
 <img width="300" alt="Screen Shot 2021-06-13 at 6 08 15 PM" src="https://user-images.githubusercontent.com/20063699/121805072-b2eb4300-cc73-11eb-8cdd-29d4a9dc3c10.png">
 
+### Remember selected currencies:
 ### Offline Mode:
 * If for some reason, the user cannot fetch data for the first time opening the app, they will be able to re-fetch the data by pressing refresh 
-<img width="300" alt="Screen Shot 2021-06-13 at 6 08 15 PM" src="https://user-images.githubusercontent.com/20063699/121804902-e2e61680-cc72-11eb-9693-e35367e3d6a9.png">
 * If there is some offline data fetched, the user will enter offline mode
-<img width="300" alt="Screen Shot 2021-06-13 at 6 08 15 PM" src="https://user-images.githubusercontent.com/20063699/121805041-8df6d000-cc73-11eb-8190-f0bfb2fe2bfa.png">
