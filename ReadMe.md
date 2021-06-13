@@ -25,8 +25,8 @@ Email: tyler.lu1401@gmail.com
   * 'PanModal'
   * 'Reusable'
 
-## Design Pattern
- ### VIPER
+## VIPER
+ ### Why VIPER?
  * Why VIPER?
   * As a requirement of the assignment, we need to write unit tests for the project. VIPER is now the most testable patterns out there.
   * VIPER is clean and clear. It's easy to read and to scale.
