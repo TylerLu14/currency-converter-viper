@@ -39,6 +39,7 @@
 		89310E892674A79B00017FEE /* UINavigationControllerExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89310E882674A79B00017FEE /* UINavigationControllerExtensions.swift */; };
 		89310E8B2674AA4400017FEE /* UIViewExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89310E8A2674AA4400017FEE /* UIViewExtensions.swift */; };
 		89310E8D2674B78600017FEE /* KeyboardFollower.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89310E8C2674B78600017FEE /* KeyboardFollower.swift */; };
+		89310E8F2675A1CF00017FEE /* CurrencyCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89310E8E2675A1CF00017FEE /* CurrencyCell.swift */; };
 		893DB116266CD1D1007AC9CE /* ConverterInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893DB10B266CD1D1007AC9CE /* ConverterInteractor.swift */; };
 		893DB117266CD1D1007AC9CE /* ConverterContract.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893DB10D266CD1D1007AC9CE /* ConverterContract.swift */; };
 		893DB118266CD1D1007AC9CE /* ConverterPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893DB10F266CD1D1007AC9CE /* ConverterPresenter.swift */; };
@@ -119,6 +120,7 @@
 		89310E882674A79B00017FEE /* UINavigationControllerExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UINavigationControllerExtensions.swift; sourceTree = "<group>"; };
 		89310E8A2674AA4400017FEE /* UIViewExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIViewExtensions.swift; sourceTree = "<group>"; };
 		89310E8C2674B78600017FEE /* KeyboardFollower.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardFollower.swift; sourceTree = "<group>"; };
+		89310E8E2675A1CF00017FEE /* CurrencyCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyCell.swift; sourceTree = "<group>"; };
 		893DB10B266CD1D1007AC9CE /* ConverterInteractor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConverterInteractor.swift; sourceTree = "<group>"; };
 		893DB10D266CD1D1007AC9CE /* ConverterContract.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConverterContract.swift; sourceTree = "<group>"; };
 		893DB10F266CD1D1007AC9CE /* ConverterPresenter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConverterPresenter.swift; sourceTree = "<group>"; };
@@ -285,6 +287,7 @@
 				89310E7E2674816D00017FEE /* CurrencySelectPresenter.swift */,
 				89310E7C2674816D00017FEE /* CurrencySelectInteractor.swift */,
 				89310E7D2674816D00017FEE /* CurrencySelectRouter.swift */,
+				89310E8E2675A1CF00017FEE /* CurrencyCell.swift */,
 			);
 			path = CurrencySelect;
 			sourceTree = "<group>";
@@ -650,6 +653,7 @@
 			files = (
 				893DB118266CD1D1007AC9CE /* ConverterPresenter.swift in Sources */,
 				893DB117266CD1D1007AC9CE /* ConverterContract.swift in Sources */,
+				89310E8F2675A1CF00017FEE /* CurrencyCell.swift in Sources */,
 				890B8167267264A3005D234D /* Color.swift in Sources */,
 				89310E852674816D00017FEE /* CurrencySelectViewController.swift in Sources */,
 				89310E812674816D00017FEE /* CurrencySelectInteractor.swift in Sources */,
