@@ -100,6 +100,7 @@ struct ExchangeDataHistory: Mappable, Persistable {
                 rate: record.exchangeData.getRate(from: source, to: destination) ?? 0
             )
         }
+        .sorted{ $0.date > $1.date }
     }
 }
 
