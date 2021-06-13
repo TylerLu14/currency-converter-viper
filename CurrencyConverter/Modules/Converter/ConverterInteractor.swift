@@ -104,7 +104,7 @@ public class ConverterInteractor {
     
     private func fetchExchangeData() -> Promise<ExchangeDataResponse> {
         guard let latestRecord = self.latestExchangeRecordPersistent.value,
-              latestRecord.timestamp < Date().timeIntervalSince1970 - 3600 else {
+              latestRecord.timestamp > Date().timeIntervalSince1970 - 3600 else {
             
             return exchangeService.fetchExchangeData()
                 .map{ exchangeData in
