@@ -35,7 +35,7 @@ public class ConverterPresenter: ConverterPresenterProtocol {
     var selectedDestinationCurrency: CurrencyData? = nil
     
     var isButtonEnabled: Bool {
-        return !fromText.isNilOrEmpty && fromText.isDecimal && selectedDestinationCurrency != nil && selectedDestinationCurrency != nil
+        return !fromText.isNilOrEmpty && selectedDestinationCurrency != nil && selectedDestinationCurrency != nil
     }
     
     public func viewDidLoad() {
