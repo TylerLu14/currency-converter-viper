@@ -78,7 +78,7 @@ protocol CurrencySelectRouterProtocol: AnyObject {
 
 ## Features:
 ### Fetch new exchange data at app launch and every hour after launch:
- <img width="300" alt="Screen Shot 2021-06-13 at 6 04 50 PM" src="https://user-images.githubusercontent.com/20063699/121804719-f5ac1b80-cc71-11eb-8e3c-a5ae33a6a7be.png">  <img width="300" alt="Screen Shot 2021-06-13 at 6 04 50 PM" src="https://user-images.githubusercontent.com/20063699/121804719-f5ac1b80-cc71-11eb-8e3c-a5ae33a6a7be.png">
+ <img width="300" alt="Screen Shot 2021-06-13 at 6 04 50 PM" src="https://user-images.githubusercontent.com/20063699/121804719-f5ac1b80-cc71-11eb-8e3c-a5ae33a6a7be.png">
  
 ### Currency Converter:
 <img width="300" alt="Screen Shot 2021-06-13 at 5 59 16 PM" src="https://user-images.githubusercontent.com/20063699/121804557-20e23b00-cc71-11eb-8e18-f24c63de4808.png">
@@ -88,7 +88,8 @@ protocol CurrencySelectRouterProtocol: AnyObject {
 
 
 ### Dark/Light Mode: Change to dark/light mode by pressing top-right corner button
-<img width="300" alt="Screen Shot 2021-06-13 at 5 59 16 PM" src="https://user-images.githubusercontent.com/20063699/121804746-1b392500-cc72-11eb-9379-c682ea47a009.png">
+<img width="300" alt="Screen Shot 2021-06-13 at 5 59 16 PM" src="https://user-images.githubusercontent.com/20063699/121804746-1b392500-cc72-11eb-9379-c682ea47a009.png"> <img width="300" alt="Screen Shot 2021-06-13 at 5 59 16 PM" src="https://user-images.githubusercontent.com/20063699/121805336-16c23b80-cc75-11eb-9337-6a39756624c0.png">
+
 
 ### Select source and destination currencies: By pressing on the left of the input and output text fields
 <img width="300" alt="Screen Shot 2021-06-13 at 5 59 16 PM" src="https://user-images.githubusercontent.com/20063699/121804821-71a66380-cc72-11eb-9f24-9135bab6d0be.png">
